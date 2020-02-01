@@ -22,6 +22,8 @@
     "sequelize-cli": "^5.5.1"
   },
   "dependencies": {
+    "express": "^4.17.1",
+    "inquirer": "^7.0.4",
     "mysql": "^2.18.1",
     "mysql2": "^2.1.0"
   }
