@@ -43,14 +43,16 @@ const start = () => {
         switch (res.action) {
             case 'View all employees':
                 employees();
-                // start();
+                break;
             case 'View employees by department':
                 employeesByDepartment();
-                // start();
+                break;
+                    // start();
             // case 'View employees by manger':
             //     employeesByManager();
             case 'Add a new employee':
                 addNewEmployee();
+                break;
             // case 'Add a new role':
             //     newprompt(prompts.addRole); 
             // case 'Add a new department':
@@ -146,8 +148,8 @@ const start = () => {
                     return deptArr;
                 }
             }]).then(answer => {
-                query = connection.query(`SELECT employees.id, employees.first_name, employees.last_name, employees.manager_id, roles.title, roles.salary, roles.department_id AS Department, CONCAT(m.first_name, " ", m.last_name) AS Manager FROM employees LEFT JOIN roles on employees.role_id = roles.id INNER JOIN employees m ON employees.manager_id = m.id LEFT JOIN department on roles.department_id = department.id WHERE department.name = '?'`,
-                [answer],
+                query = connection.query(`SELECT employees.id, employees.first_name, employees.last_name, employees.manager_id, roles.title, roles.salary, roles.department_id AS Department, CONCAT(m.first_name, " ", m.last_name) AS Manager FROM employees LEFT JOIN roles on employees.role_id = roles.id INNER JOIN employees m ON employees.manager_id = m.id LEFT JOIN department on roles.department_id = department.id WHERE department.name = ?`,
+                [answer.department],
                 function(err, res){
                     console.log(res);
                         if (err) throw err;
