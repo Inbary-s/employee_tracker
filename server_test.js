@@ -18,6 +18,8 @@ connection.connect(function(err) {
     start();
   });
 
+  const employeesQuary = `SELECT employees.id, employees.first_name, employees.last_name, employees.manager_id, roles.title, roles.salary, roles.department_id AS Department, NULL AS Manager FROM employees LEFT JOIN roles ON employees.role_id = roles.id INNER JOIN department ON roles.department_id = department_id WHERE employees.manager_id IS NULL GROUP BY employees.id UNION SELECT employees.id, employees.first_name, employees.last_name, employees.manager_id, roles.title, roles.salary, roles.department_id AS Department, CONCAT(m.first_name, " ", m.last_name) AS Manager FROM employees LEFT JOIN roles ON employees.role_id = roles.id INNER JOIN department ON roles.department_id = department_id INNER JOIN employees m ON employees.manager_id = m.id GROUP BY employees.id`;
+
 const start = () => {
     inquirer.prompt({
             message: "What would you like to do?",
@@ -75,57 +77,56 @@ const start = () => {
         }).catch(err=>console.log(err));
     }
 
-    const addNewEmployee = () => {
-        inquirer.prompt([{
-            message: "What is the employee's first name?",
-            type: "input",
-            name: "first_name"
-        },{
-            message: "What is the employee's last name?",
-            type: "input",
-            name: "last_name"
-        },{
-            message: "What is the employee's role?",
-            type: "list",
-            name: 'role_id',
-            choices: function(){
-                let roleArr = [];
-                connection.query(`SELECT DISTINCT title from roles`, function(err, data){    
-                    for (let i = 0; i < data.length; i++){
-                    roleArr.push(data[i].title);
-                }
-                console.log(roleArr);
-                return roleArr;
-            })
-        },
-        },{
-            message: "Who is this employee's Manager?",
-            type: "list", 
-            name: 'manager_id',
-            choices: function(){
-                let managerArr = [];
-                connection.query(`SELECT CONCAT(m.first_name, " ", m.last_name) AS Manager FROM employees INNER JOIN employees m ON employees.manager_id = m.id`, function(err, data){    
-                    for (let i = 0; i < data.length; i++){
-                    managerArr.push(data[i].title);
-                }
-                console.log(managerArr);
-                return managerArr;
-            });
+const addNewEmployee = () => {
+    connection.query(`SELECT CONCAT(first_name, " ", last_name) AS Manager, id FROM employees`, function(err, res){
+        connection.query(`SELECT DISTINCT title, id from roles`, function(err, data){    
+            inquirer.prompt([{
+                message: "What is the employee's first name?",
+        type: "input",
+        name: "first_name"
+    },{
+        message: "What is the employee's last name?",
+        type: "input",
+        name: "last_name"
+    },{
+        message: "What is the employee's role?",
+        type: "list",
+        name: 'role_id',
+        choices: function(){
+            let roleArr = [];
+                for (let i = 0; i < data.length; i++){
+                roleArr.push(`${data[i].id}: ${data[i].title}`);
             }
-        },{
-            message: "Is this employee a Manager?",
-            type: "confirm", 
-            name: 'is_manager'
-        }]).then(answer => {
-            connection.query(`INSERT INTO employees(${answer.first_name}, ${answer.last_name}, ${answer.role_id}, ${answer.manager_id}, ${answer.is_manager})`, function(err, res){
-                console.log("Success! A new employee Added");
-                start();
-            });
+            console.log(data[0].id);
+            return roleArr;
+        }
+    },{
+        message: "Who will be this employee's Manager?",
+        type: "list", 
+        name: 'manager_id',
+        choices: function(){
+        let managerArr = [];
+                for (let i = 0; i < res.length; i++){
+                managerArr.push(`${res[i].id}: ${res[i].Manager}`);
+            }
+            console.log(res);
+            return managerArr;
+        }
+    },{
+        message: "Is this employee a Manager?",
+        type: "confirm", 
+        name: 'is_manager'
+    }]).then(answer => {
+        connection.query(`INSERT INTO employees(first_name, last_name, role_id, manager_id, is_manager) VALUES ('${answer.first_name}', '${answer.last_name}', ${answer.role_id[0]}, ${answer.manager_id[0]}, ${answer.is_manager})`, function(err, res){
+        start();
         });
-    }
-        
+    });
+})
+})
+}
+
     const employees = () => {
-        connection.query('SELECT employees.id, employees.first_name, employees.last_name, employees.manager_id, roles.title, roles.salary, roles.department_id AS Department, NULL AS Manager FROM employees LEFT JOIN roles ON employees.role_id = roles.id INNER JOIN department ON roles.department_id = department_id WHERE employees.manager_id IS NULL GROUP BY employees.id UNION SELECT employees.id, employees.first_name, employees.last_name, employees.manager_id, roles.title, roles.salary, roles.department_id AS Department, CONCAT(m.first_name, " ", m.last_name) AS Manager FROM employees LEFT JOIN roles ON employees.role_id = roles.id INNER JOIN department ON roles.department_id = department_id INNER JOIN employees m ON employees.manager_id = m.id GROUP BY employees.id;',
+        connection.query(employeesQuary,
                 function(err, res){
                 if (err) throw err;
                 const table = cTable.getTable(res);

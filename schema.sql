@@ -33,20 +33,10 @@ CREATE TABLE employees (
     FOREIGN KEY (role_id) REFERENCES roles(id)
 );
 
--- CREATE TABLE managers (
--- 	id INT,
---     first_name VARCHAR (30),
---     last_name VARCHAR (30),
---     foreign key(first_name) references employees(first_name),
---     foreign key(last_name) references employees(last_name),
---     foreign key(id) references employees(id)
--- );
--- INSERT INTO managers (id) VALUES (6);
 INSERT INTO employees (first_name, last_name, role_id, manager_id, is_manager) VALUES ("Alice", "Black", 2, NULL, TRUE);
 INSERT INTO employees (first_name, last_name, role_id, manager_id, is_manager) VALUES ("Inbar", "Shucker", 2, 1, FALSE);
 SELECT * FROM department;
 SELECT * FROM roles;
--- SELECT * FROM managers;
 SELECT * FROM employees;
 
 SELECT employees.id, employees.first_name, employees.last_name, employees.manager_id, roles.title, roles.salary, roles.id, department.name AS Department 
@@ -93,5 +83,11 @@ LEFT JOIN roles on employees.role_id = roles.id
 INNER JOIN employees m ON employees.manager_id = m.id
 LEFT JOIN department on roles.department_id = department.id WHERE department.id = '4';
 
+SELECT DISTINCT title from roles ;
+
+SELECT r.title, CONCAT(e.first_name, " ", e.last_name) AS Manager FROM (SELECT * FROM roles) AS r, (SELECT * FROM employees) AS e;
+
 SELECT employees.id, employees.first_name, employees.last_name, employees.manager_id, roles.title, roles.salary, roles.department_id AS Department, CONCAT(m.first_name, " ", m.last_name) AS Manager FROM employees LEFT JOIN roles ON employees.role_id = roles.id LEFT JOIN department ON roles.department_id = department_id INNER JOIN employees m ON employees.manager_id = m.id WHERE department.name = HR;
-SELECT DISTINCT name from department
+SELECT DISTINCT name from department;
+SELECT CONCAT(first_name, " ", last_name) AS Manager, id FROM employees;
+SELECT CONCAT(m.first_name, " ", m.last_name) AS Manager FROM employees INNER JOIN employees m ON employees.manager_id = m.id LEFT JOIN roles ON title;
