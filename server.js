@@ -28,11 +28,12 @@ const start = () => {
                 'View all employees', 
                 'View employees by department', 
                 'View roles',
+                'View departments',
                 // 'View employees by manger', 
                 'Add a new employee', 
                 'Add a new role', 
-                // 'Add a new department', 
-                // 'Update employee roles', 
+                'Add a new department', 
+                'Update employee roles', 
                 // 'Update employee manager', 
                 // 'Delete departments', 
                 // 'Delete roles', 
@@ -53,6 +54,9 @@ const start = () => {
             case 'View roles':
                 viewRoles();
                 break;
+            case 'View departments':
+                viewDepartments();
+                break;
             // case 'View employees by manger':
             //     employeesByManager();
             case 'Add a new employee':
@@ -61,10 +65,12 @@ const start = () => {
             case 'Add a new role':
                 addRole(); 
                 break;
-            // case 'Add a new department':
-            //     newprompt(prompts.addDepartment); 
-            // case 'Update employee roles':
-            //     newprompt(prompts.updateRoles)
+            case 'Add a new department':
+                addDepartment(); 
+                break;
+            case 'Update employee roles':
+                updateEmployeeRole();
+                break;
             // case 'Update employee manager':
             //     newprompt(prompts.updateManager);
             // case 'Delete departments':
@@ -86,49 +92,50 @@ const addNewEmployee = () => {
         connection.query(`SELECT DISTINCT title, id from roles`, function(err, data){    
             inquirer.prompt([{
                 message: "What is the employee's first name?",
-        type: "input",
-        name: "first_name"
-    },{
-        message: "What is the employee's last name?",
-        type: "input",
-        name: "last_name"
-    },{
-        message: "What is the employee's role?",
-        type: "list",
-        name: 'role_id',
-        choices: function(){
-            let roleArr = [];
-                for (let i = 0; i < data.length; i++){
-                roleArr.push(`${data[i].id}: ${data[i].title}`);
-            }
-            console.log(data[0].id);
-            return roleArr;
-        }
-    },{
-        message: "Who will be this employee's Manager?",
-        type: "list", 
-        name: 'manager_id',
-        choices: function(){
-        let managerArr = [];
-                for (let i = 0; i < res.length; i++){
-                managerArr.push(`${res[i].id}: ${res[i].Manager}`);
-            }
-            console.log(res);
-            return managerArr;
-        }
-    },{
-        message: "Is this employee a Manager?",
-        type: "confirm", 
-        name: 'is_manager'
-    }]).then(answer => {
-        connection.query(`INSERT INTO employees(first_name, last_name, role_id, manager_id, is_manager) VALUES ('${answer.first_name}', '${answer.last_name}', ${answer.role_id[0]}, ${answer.manager_id[0]}, ${answer.is_manager})`, function(err, res){
-            console.log(res);
-            start();
+                type: "input",
+                name: "first_name"
+            },{
+                message: "What is the employee's last name?",
+                type: "input",
+                name: "last_name"
+            },{
+                message: "What is the employee's role?",
+                type: "list",
+                name: 'role_id',
+                choices: function(){
+                    let roleArr = [];
+                        for (let i = 0; i < data.length; i++){
+                        roleArr.push(`${data[i].id}: ${data[i].title}`);
+                    }
+                    console.log(data[0].id);
+                    return roleArr;
+                }
+            },{
+                message: "Who will be this employee's Manager?",
+                type: "list", 
+                name: 'manager_id',
+                choices: function(){
+                let managerArr = [];
+                        for (let i = 0; i < res.length; i++){
+                        managerArr.push(`${res[i].id}: ${res[i].Manager}`);
+                    }
+                    console.log(res);
+                    return managerArr;
+                }
+            },{
+                message: "Is this employee a Manager?",
+                type: "confirm", 
+                name: 'is_manager'
+            }]).then(answer => {
+                connection.query(`INSERT INTO employees(first_name, last_name, role_id, manager_id, is_manager) VALUES ('${answer.first_name}', '${answer.last_name}', ${answer.role_id[0]}, ${answer.manager_id[0]}, ${answer.is_manager})`, function(err, res){
+                    console.log(res);
+                    start();
+                });
+            });
         });
     });
-})
-})
 }
+
 const addRole = () => {
     connection.query(`SELECT id, name FROM department`, function(err, data){    
         inquirer.prompt([{
@@ -165,44 +172,92 @@ const addRole = () => {
 })
 }
 
-    const employees = () => {
-        connection.query(employeesQuary,
-                function(err, res){
-                if (err) throw err;
-                const table = cTable.getTable(res);
-                console.log(`\n${table}`);
-                start();  
-            });
-        }
-    const employeesByDepartment = async () => {
-        connection.query(`SELECT DISTINCT name from department`, function(err, res) {
-            if (err) throw err;
-            inquirer.prompt([{
-                name: "department",
-                type: "list",
-                message: "Select department:",
-                choices: function(){
-                    let deptArr = [];
-                    for (let i = 0; i < res.length; i++){
-                        deptArr.push(res[i].name);
-                    }
-                    return deptArr;
+const updateEmployeeRole = () =>{
+    connection.query(`SELECT CONCAT(first_name, " ", last_name) AS Name, id FROM employees`, function(err, res){
+        connection.query(`SELECT DISTINCT title, id from roles`, function(err, data){
+        inquirer.prompt([{
+            message: "Select employee:",
+            type: "list",
+            name: "name",
+            choices: function(){
+                let employeeArr = [];
+                for (let i = 0; i < res.length; i++){
+                    employeeArr.push(`${res[i].id}: ${res[i].Name}`);
+            }
+                console.log(res);
+                return employeeArr;
+            } 
+        },{
+            message: "Select role to update",
+            type: "list",
+            name: "role_id",
+            choices: function(){
+                let roleArr = [];
+                    for (let i = 0; i < data.length; i++){
+                    roleArr.push(`${data[i].id}: ${data[i].title}`);
                 }
-            }]).then(answer => {
-                query = connection.query(`SELECT employees.id, employees.first_name, employees.last_name, employees.manager_id, roles.title, roles.salary, roles.department_id AS Department, CONCAT(m.first_name, " ", m.last_name) AS Manager FROM employees LEFT JOIN roles on employees.role_id = roles.id INNER JOIN employees m ON employees.manager_id = m.id LEFT JOIN department on roles.department_id = department.id WHERE department.name = ?`,
-                [answer.department],
-                function(err, res){
-                    console.log(res);
-                        if (err) throw err;
-                        const table = cTable.getTable(res);
-                        console.log(`\n${table}`);
-                        start();   
-                    });
+                console.log(data[0].id);
+                return roleArr;
+            }
+        }]).then(answer => {
+            connection.query(`UPDATE employees SET role_id = ${answer.role_id[0]} WHERE id = ${answer.name[0]}`, function(err, res){
+                console.log(res);
+                start();
+            });
+        });   
+        });
+    });
+}
 
-            })
+const addDepartment = () => {    
+        inquirer.prompt([{
+        message: "What is the new department name?",
+        type: "input",
+        name: "name"
+    }]).then(answer => {
+        connection.query(`INSERT INTO department (name) VALUES ('${answer.name}')`, function(err, res){
+            start();
+        });
+    });
+};
 
+const employees = () => {
+    connection.query(employeesQuary,
+        function(err, res){
+        if (err) throw err;
+        const table = cTable.getTable(res);
+        console.log(`\n${table}`);
+        start();  
+    });
+}
+
+const employeesByDepartment = async () => {
+    connection.query(`SELECT DISTINCT name from department`, function(err, res) {
+        if (err) throw err;
+        inquirer.prompt([{
+            name: "department",
+            type: "list",
+            message: "Select department:",
+            choices: function(){
+                let deptArr = [];
+                for (let i = 0; i < res.length; i++){
+                    deptArr.push(res[i].name);
+                }
+                return deptArr;
+            }
+        }]).then(answer => {
+            query = connection.query(`SELECT employees.id, employees.first_name, employees.last_name, employees.manager_id, roles.title, roles.salary, roles.department_id AS Department, CONCAT(m.first_name, " ", m.last_name) AS Manager FROM employees LEFT JOIN roles on employees.role_id = roles.id INNER JOIN employees m ON employees.manager_id = m.id LEFT JOIN department on roles.department_id = department.id WHERE department.name = ?`,
+            [answer.department],
+            function(err, res){
+                console.log(res);
+                    if (err) throw err;
+                    const table = cTable.getTable(res);
+                    console.log(`\n${table}`);
+                    start();   
+                });
         })
-    }
+    })
+}
 
 const viewRoles = () => {
     connection.query(`SELECT DISTINCT title, id from roles`, function(err, data){
@@ -212,72 +267,12 @@ const viewRoles = () => {
             start(); 
     });
 }
-    // if(res.action === 'Add'){
-    //     inquirer.prompt(prompts[res.target]).then(answer=>{
-    //         viewDepartments: departments()
-    //         // connection.query(`INSERT INTO ${res.target} `)
-    //     })
-    
-    
-    // roles()
-    // managers()
 
-// const departments =()=>{
-//     connection.query("SELECT * FROM department", (err, data) => {
-//     if (err) {
-//         return res.status(500).end();
-//     };
-//     res.json(data);
-// });
-// } 
-
-// let prompts = {
-//     }
-// //     addRole:[{
-// //         message: "What is the role title?",
-// //         type: "input",
-// //         name: "title"
-// //     },{
-// //         message: "What is the annual salary?",
-// //         type: "input",
-// //         name: "last_name"
-// //     },{
-// //         message: "What is the department id of this role?",
-// //         type: "list",
-// //         choices:[departments],
-// //         name: 'department_id'
-// //     }],
-// //     addDepartment:{
-// //         message: "What is the department name?",
-// //         type: "input",
-// //         name: "name"
-
-// };  
-
-
-
-// const managers = () => {connection.query("SELECT * FROM managers", (err, data) => {
-//     data.forEach(datum=>managerArr.push(datum.title))
-//     console.log(data)
-// });
-// }
-
-
-// let newprompt = (arg)=>{
-// inquirer.prompt(arg).then(answer=>{
-//     console.log("Done")
-// });
-// }
-
-
-
-
-
-
-
-// // start();
-
-// app.listen(PORT, function() {
-//     // Log (server-side) when our server has started
-//     console.log("Server listening on: http://localhost:" + PORT);
-//   });
+const viewDepartments = () => {
+    connection.query(`SELECT * FROM department`, function(err, data){
+        if (err) throw err;
+            const table = cTable.getTable(data);
+            console.log(`\n${table}`);
+            start(); 
+    });
+}

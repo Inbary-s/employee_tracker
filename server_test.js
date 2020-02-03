@@ -29,13 +29,13 @@ const start = () => {
                 'View employees by department', 
                 'View roles',
                 'View departments',
-                // 'View employees by manger', 
+                'View employees by manger', 
                 'Add a new employee', 
                 'Add a new role', 
                 'Add a new department', 
                 'Update employee roles', 
-                // 'Update employee manager', 
-                // 'Delete departments', 
+                'Update employee manager', 
+                'Delete departments', 
                 // 'Delete roles', 
                 // 'Delete employees', 
                 // 'View the total utilized budget of a department',
@@ -57,8 +57,9 @@ const start = () => {
             case 'View departments':
                 viewDepartments();
                 break;
-            // case 'View employees by manger':
-            //     employeesByManager();
+            case 'View employees by manger':
+                employeesByManager();
+                break;
             case 'Add a new employee':
                 addNewEmployee();
                 break;
@@ -71,10 +72,12 @@ const start = () => {
             case 'Update employee roles':
                 updateEmployeeRole();
                 break;
-            // case 'Update employee manager':
-            //     newprompt(prompts.updateManager);
-            // case 'Delete departments':
-            //     deleteDepartment();
+            case 'Update employee manager':
+                updateEmpManager();
+                break;
+            case 'Delete departments':
+                deleteDepartment();
+                break;
             // case 'Delete roles':
             //     eleteRoles();
             // case 'Delete employees': 
@@ -135,6 +138,7 @@ const addNewEmployee = () => {
         });
     });
 }
+
 const addRole = () => {
     connection.query(`SELECT id, name FROM department`, function(err, data){    
         inquirer.prompt([{
@@ -207,6 +211,44 @@ const updateEmployeeRole = () =>{
         });
     });
 }
+const updateEmpManager = () =>{
+    connection.query(`SELECT CONCAT(m.first_name, " ", m.last_name) AS Manager, m.id FROM employees INNER JOIN employees m ON employees.manager_id = m.id`, function(err, data){
+        connection.query(`SELECT CONCAT(first_name, " ", last_name) AS Name, id FROM employees`, function(err, res){
+            console.log(data);
+            if (err) throw err;
+            inquirer.prompt([{
+                message: "Select employee:",
+                type: "list",
+                name: "name",
+                choices: function(){
+                    let employeeArr = [];
+                    for (let i = 0; i < res.length; i++){
+                        employeeArr.push(`${res[i].id}: ${res[i].Name}`);
+                }
+                    console.log(res);
+                    return employeeArr;
+                } 
+            },{
+                message: "Select Manager:",
+                type: "list", 
+                name: 'manager_id',
+                choices: function(){
+                    let managerArr = [];
+                    for (let i = 0; i < data.length; i++){
+                    managerArr.push(`${data[i].id}: ${data[i].Manager}`);
+                }
+                console.log(data.Manager);
+                return managerArr;
+            }
+            }]).then(answer => {
+                connection.query(`UPDATE employees SET manager_id = ${answer.manager_id[0]} WHERE id = ${answer.name[0]}`, function(err, res){
+                    console.log(res);
+                    start();
+                });
+            });   
+        });
+    });
+}
 
 const addDepartment = () => {    
         inquirer.prompt([{
@@ -219,6 +261,10 @@ const addDepartment = () => {
         });
     });
 };
+
+const deleteDepartment = () => {
+    
+}
 
 const employees = () => {
     connection.query(employeesQuary,
@@ -254,9 +300,38 @@ const employeesByDepartment = async () => {
                     console.log(`\n${table}`);
                     start();   
                 });
-
         })
+    })
+}
 
+const employeesByManager = async () => {
+    connection.query(`SELECT CONCAT(m.first_name, " ", m.last_name) AS Manager, m.id FROM employees INNER JOIN employees m ON employees.manager_id = m.id`, function(err, res){
+        if (err) throw err;
+        inquirer.prompt({
+            message: "Select Manager:",
+                type: "list", 
+                name: 'manager_id',
+                choices: function(){
+                let managerArr = [];
+                    for (let i = 0; i < res.length; i++){
+                    managerArr.push(`${res[i].id}: ${res[i].Manager}`);
+                }
+                console.log(res);
+                return managerArr;
+            }
+        }).then(answer => {
+            query = connection.query(`SELECT employees.id, CONCAT(first_name, " ", last_name) AS Name, roles.title 
+            FROM employees INNER JOIN roles ON employees.role_id = roles.id 
+            WHERE employees.manager_id = ${answer.manager_id[0]} GROUP BY employees.id`,
+            [answer.department],
+            function(err, res){
+                console.log(res);
+                    if (err) throw err;
+                    const table = cTable.getTable(res);
+                    console.log(`\n${table}`);
+                    start();   
+            });
+        })
     })
 }
 
@@ -277,72 +352,3 @@ const viewDepartments = () => {
             start(); 
     });
 }
-// if(res.action === 'Add'){
-    //     inquirer.prompt(prompts[res.target]).then(answer=>{
-    //         viewDepartments: departments()
-    //         // connection.query(`INSERT INTO ${res.target} `)
-    //     })
-    
-    
-    // roles()
-    // managers()
-
-// const departments =()=>{
-//     connection.query("SELECT * FROM department", (err, data) => {
-//     if (err) {
-//         return res.status(500).end();
-//     };
-//     res.json(data);
-// });
-// } 
-
-// let prompts = {
-//     }
-// //     addRole:[{
-// //         message: "What is the role title?",
-// //         type: "input",
-// //         name: "title"
-// //     },{
-// //         message: "What is the annual salary?",
-// //         type: "input",
-// //         name: "last_name"
-// //     },{
-// //         message: "What is the department id of this role?",
-// //         type: "list",
-// //         choices:[departments],
-// //         name: 'department_id'
-// //     }],
-// //     addDepartment:{
-// //         message: "What is the department name?",
-// //         type: "input",
-// //         name: "name"
-
-// };  
-
-
-
-// const managers = () => {connection.query("SELECT * FROM managers", (err, data) => {
-//     data.forEach(datum=>managerArr.push(datum.title))
-//     console.log(data)
-// });
-// }
-
-
-// let newprompt = (arg)=>{
-// inquirer.prompt(arg).then(answer=>{
-//     console.log("Done")
-// });
-// }
-
-
-
-
-
-
-
-// // start();
-
-// app.listen(PORT, function() {
-//     // Log (server-side) when our server has started
-//     console.log("Server listening on: http://localhost:" + PORT);
-//   });
