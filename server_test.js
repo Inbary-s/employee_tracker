@@ -36,9 +36,9 @@ const start = () => {
                 'Update employee roles', 
                 'Update employee manager', 
                 'Delete departments', 
-                // 'Delete roles', 
-                // 'Delete employees', 
-                // 'View the total utilized budget of a department',
+                'Delete roles', 
+                'Delete employees', 
+                'View the total utilized budget of a department',
                 'Exit'],
             name: "action"
         }
@@ -78,12 +78,15 @@ const start = () => {
             case 'Delete departments':
                 deleteDepartment();
                 break;
-            // case 'Delete roles':
-            //     eleteRoles();
-            // case 'Delete employees': 
-            //     deleteEmployees();
-            // case 'View the total utilized budget of a department':
-            //     viewDeptUtilBudget();
+            case 'Delete roles':
+                deleteRoles();
+                break;
+            case 'Delete employees': 
+                deleteEmployees();
+                break;
+            case 'View the total utilized budget of a department':
+                viewDeptUtilBudget();
+                break;
             case 'Exit':
                 connection.end();   
             }
@@ -263,7 +266,76 @@ const addDepartment = () => {
 };
 
 const deleteDepartment = () => {
+    connection.query(`SELECT DISTINCT name, id from department`, function(err, res) {
+        inquirer.prompt([{
+            message: "Select a dipartment to delete",
+            type: "list",
+            name: "department",
+            choices: function(){
+                let deptArr = [];
+                        for (let i = 0; i < res.length; i++){
+                        deptArr.push(`${res[i].id}: ${res[i].name}`);
+                    }
+                    console.log(res);
+                    return deptArr;
+                }
+        }]).then(answer => {
+            connection.query(`DELETE FROM department WHERE id = ${answer.department[0]}`, function(err, res){
+                start();
+            });
+        });
+
+    });
+};
+
+const viewDeptUtilBudget = () => {
     
+}
+
+const deleteRoles = () => {
+    connection.query(`SELECT DISTINCT title, id from roles`, function(err, res) {
+        inquirer.prompt([{
+            message: "Select a role to delete",
+            type: "list",
+            name: "roles_id",
+            choices: function(){
+                let roleArr = [];
+                        for (let i = 0; i < res.length; i++){
+                        roleArr.push(`${res[i].id}: ${res[i].title}`);
+                    }
+                    console.log(res);
+                    return roleArr;
+                }
+        }]).then(answer => {
+            connection.query(`DELETE FROM roles WHERE id = ${answer.roles_id[0]}`, function(err, res){
+                start();
+            });
+        });
+
+    });
+};
+
+const deleteEmployees = () => {
+    connection.query(`SELECT CONCAT(first_name, " ", last_name) AS Name, id FROM employees`, function(err, res){
+        inquirer.prompt([{
+            message: "Select employee to delete",
+            type: "list",
+            name: "Name",
+            choices: function(){
+                let employeeArr = [];
+                        for (let i = 0; i < res.length; i++){
+                        employeeArr.push(`${res[i].id}: ${res[i].Name}`);
+                    }
+                    console.log(res);
+                    return employeeArr;
+                }
+        }]).then(answer => {
+            connection.query(`DELETE FROM employees WHERE id = ${answer.Name[0]}`, function(err, res){
+                start();
+            });
+        });
+
+    });
 }
 
 const employees = () => {
@@ -274,7 +346,7 @@ const employees = () => {
         console.log(`\n${table}`);
         start();  
     });
-}
+};
 
 const employeesByDepartment = async () => {
     connection.query(`SELECT DISTINCT name from department`, function(err, res) {
