@@ -27,9 +27,10 @@ const start = () => {
             choices: [
                 'View all employees', 
                 'View employees by department', 
+                'View roles',
                 // 'View employees by manger', 
                 'Add a new employee', 
-                // 'Add a new role', 
+                'Add a new role', 
                 // 'Add a new department', 
                 // 'Update employee roles', 
                 // 'Update employee manager', 
@@ -49,14 +50,17 @@ const start = () => {
             case 'View employees by department':
                 employeesByDepartment();
                 break;
-                    // start();
+            case 'View roles':
+                viewRoles();
+                break;
             // case 'View employees by manger':
             //     employeesByManager();
             case 'Add a new employee':
                 addNewEmployee();
                 break;
-            // case 'Add a new role':
-            //     newprompt(prompts.addRole); 
+            case 'Add a new role':
+                addRole(); 
+                break;
             // case 'Add a new department':
             //     newprompt(prompts.addDepartment); 
             // case 'Update employee roles':
@@ -118,10 +122,46 @@ const addNewEmployee = () => {
         name: 'is_manager'
     }]).then(answer => {
         connection.query(`INSERT INTO employees(first_name, last_name, role_id, manager_id, is_manager) VALUES ('${answer.first_name}', '${answer.last_name}', ${answer.role_id[0]}, ${answer.manager_id[0]}, ${answer.is_manager})`, function(err, res){
-        start();
+            console.log(res);
+            start();
         });
     });
 })
+})
+}
+const addRole = () => {
+    connection.query(`SELECT id, name FROM department`, function(err, data){    
+        inquirer.prompt([{
+        message: "What is the new title?",
+        type: "input",
+        name: "title"
+    },{
+        message: "What is the role's salary?",
+        type: "input",
+        name: "salary"
+        // validate: async (input) => {
+        //     if (typeof input !== 'number'){
+        //         return 'Please provide a valid number!'}
+        //     return true;
+        // }
+    },{
+        message: "Which department does this role belong to?",
+        type: "list", 
+        name: 'department_id',
+        choices: function(){
+            let dptArr = [];
+            for (let i = 0; i < data.length; i++){
+                dptArr.push(`${data[i].id}: ${data[i].name}`);
+            }
+            console.log(data);
+            return dptArr;
+        }
+    }]).then(answer => {
+        connection.query(`INSERT INTO roles(title, salary, department_id) VALUES ('${answer.title}', ${answer.salary}, ${answer.department_id[0]})`, function(err, res){
+            console.log(res);
+            start();
+        });
+    });
 })
 }
 
@@ -164,6 +204,14 @@ const addNewEmployee = () => {
         })
     }
 
+const viewRoles = () => {
+    connection.query(`SELECT DISTINCT title, id from roles`, function(err, data){
+        if (err) throw err;
+            const table = cTable.getTable(data);
+            console.log(`\n${table}`);
+            start(); 
+    });
+}
     // if(res.action === 'Add'){
     //     inquirer.prompt(prompts[res.target]).then(answer=>{
     //         viewDepartments: departments()

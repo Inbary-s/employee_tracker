@@ -91,3 +91,4 @@ SELECT employees.id, employees.first_name, employees.last_name, employees.manage
 SELECT DISTINCT name from department;
 SELECT CONCAT(first_name, " ", last_name) AS Manager, id FROM employees;
 SELECT CONCAT(m.first_name, " ", m.last_name) AS Manager FROM employees INNER JOIN employees m ON employees.manager_id = m.id LEFT JOIN roles ON title;
+SELECT id, name FROM department;
