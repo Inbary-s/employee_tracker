@@ -13,7 +13,7 @@ const connection = mysql.createConnection({
 
 connection.connect(function(err) {
     if (err) throw err;
-    console.log("connected as id " + connection.threadId + "\n");
+    // console.log("connected as id " + connection.threadId + "\n");
     start();
   });
 
@@ -150,12 +150,12 @@ const addRole = () => {
         },{
         message: "What is the role's salary?",
         type: "input",
-        name: "salary"
-        // validate: async (input) => {
-        //     if (typeof input !== 'number'){
-        //         return 'Please provide a valid number!'}
-        //     return true;
-        // }
+        name: "salary",
+        validate: (input) => {
+            if (!isNaN(input)){
+                return true;
+            }else{
+            return 'Please provide a valid number!'}}
         },{
         message: "Which department does this role belong to?",
         type: "list", 
